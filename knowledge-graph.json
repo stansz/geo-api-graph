@@ -1,0 +1,2556 @@
+{
+  "nodes": [
+    {
+      "id": "file:bin/geo-api.py",
+      "type": "file",
+      "name": "geo-api.py",
+      "filePath": "bin/geo-api.py",
+      "summary": "Primary geospatial API server entry point using Python stdlib http.server. Handles trails, cycling, elevation, transit, OSM POIs, geocoding, weather, ferries, sea navigation, roads, and mining endpoints via a monolithic GeoAPIHandler class with 74 methods. Designed to be run as `python3 bin/geo-api.py`.",
+      "tags": [
+        "entry-point",
+        "api-handler",
+        "geo",
+        "server"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Single-file monolith using http.server.BaseHTTPRequestHandler instead of a framework. Thread-local SQLite connections, in-memory caches for weather/ferries, and Lambert conic projection math."
+    },
+    {
+      "id": "file:geo-api.py",
+      "type": "file",
+      "name": "geo-api.py",
+      "filePath": "geo-api.py",
+      "summary": "Main geospatial API server using Python stdlib http.server. Serves 30+ REST endpoints for trails, cycling routes, elevation profiles, transit schedules, OSM places search, geocoding, BC Ferries, weather, sea navigation, road events, and mining data. Nearly identical to bin/geo-api.py but run from the project root.",
+      "tags": [
+        "entry-point",
+        "api-handler",
+        "geo",
+        "server"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Single-file monolith with 3690 lines. Uses BaseHTTPRequestHandler, thread-local SQLite connections, Lambert conformal conic projection, and haversine distance calculations."
+    },
+    {
+      "id": "file:geo_api_auth.py",
+      "type": "file",
+      "name": "geo_api_auth.py",
+      "filePath": "geo_api_auth.py",
+      "summary": "API key authentication and rate limiting module for the Geo API. Manages key generation, validation, per-key sliding-window rate limiting, whitelisted origin bypass, and full CRUD key management backed by SQLite.",
+      "tags": [
+        "utility",
+        "authentication",
+        "middleware"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:bin/geo-api.py:GeoAPIHandler",
+      "type": "class",
+      "name": "GeoAPIHandler",
+      "filePath": "bin/geo-api.py",
+      "lineRange": [
+        200,
+        3465
+      ],
+      "summary": "Monolithic HTTP request handler extending BaseHTTPRequestHandler. Dispatches all API endpoints including places (search, near, custom CRUD, reviews), trails (search, near, segments, elevations, info), transit (stations, schedule, nearest, lines, bus-stops, route), geocoding, elevation, weather, ferries, sea POIs/lighthouses/trails, cycling, roads, mining, and key management. Includes CORS, auth checking, and static file serving.",
+      "tags": [
+        "api-handler",
+        "controller",
+        "geo",
+        "server"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:bin/geo-api.py:ThreadedHTTPServer",
+      "type": "class",
+      "name": "ThreadedHTTPServer",
+      "filePath": "bin/geo-api.py",
+      "lineRange": [
+        3566,
+        3582
+      ],
+      "summary": "Threaded HTTP server wrapper that handles individual requests in separate threads for concurrent request processing.",
+      "tags": [
+        "server",
+        "utility",
+        "concurrency"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/geo-api.py:get_db",
+      "type": "function",
+      "name": "get_db",
+      "filePath": "bin/geo-api.py",
+      "lineRange": [
+        96,
+        111
+      ],
+      "summary": "Returns a thread-local SQLite connection for the named database (osm, trails, transit, custom, elevation, cycling, addresses). Creates and configures the connection on first access per thread.",
+      "tags": [
+        "utility",
+        "database",
+        "connection"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/geo-api.py:row_to_dict",
+      "type": "function",
+      "name": "row_to_dict",
+      "filePath": "bin/geo-api.py",
+      "lineRange": [
+        114,
+        124
+      ],
+      "summary": "Converts a sqlite3.Row to a plain dict, auto-decoding JSON strings stored in columns prefixed with 'json_'.",
+      "tags": [
+        "utility",
+        "serialization",
+        "database"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/geo-api.py:haversine",
+      "type": "function",
+      "name": "haversine",
+      "filePath": "bin/geo-api.py",
+      "lineRange": [
+        142,
+        150
+      ],
+      "summary": "Computes the haversine distance in meters between two lat/lon coordinate pairs using the standard great-circle formula.",
+      "tags": [
+        "utility",
+        "geo",
+        "math"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/geo-api.py:province_where",
+      "type": "function",
+      "name": "province_where",
+      "filePath": "bin/geo-api.py",
+      "lineRange": [
+        186,
+        193
+      ],
+      "summary": "Generates a SQL WHERE clause fragment that filters results to a Canadian province using its bounding box coordinates.",
+      "tags": [
+        "utility",
+        "geo",
+        "database"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/geo-api.py:_lambert_inv",
+      "type": "function",
+      "name": "_lambert_inv",
+      "filePath": "bin/geo-api.py",
+      "lineRange": [
+        3472,
+        3507
+      ],
+      "summary": "Inverse Lambert conformal conic projection \u2014 converts easting/northing coordinates back to latitude/longitude for Canadian spatial data.",
+      "tags": [
+        "utility",
+        "geo",
+        "math",
+        "projection"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/geo-api.py:_lambert_fwd",
+      "type": "function",
+      "name": "_lambert_fwd",
+      "filePath": "bin/geo-api.py",
+      "lineRange": [
+        3510,
+        3541
+      ],
+      "summary": "Forward Lambert conformal conic projection \u2014 converts latitude/longitude to easting/northing coordinates for Canadian spatial data processing.",
+      "tags": [
+        "utility",
+        "geo",
+        "math",
+        "projection"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:geo-api.py:GeoAPIHandler",
+      "type": "class",
+      "name": "GeoAPIHandler",
+      "filePath": "geo-api.py",
+      "lineRange": [
+        200,
+        3547
+      ],
+      "summary": "Monolithic HTTP request handler extending BaseHTTPRequestHandler. Dispatches all API endpoints including places (search, near, custom CRUD, reviews), trails (search, near, segments, elevations, info), transit (stations, schedule, nearest, lines, bus-stops, route), geocoding, elevation, weather, ferries, sea POIs/lighthouses/trails, cycling, roads, mining, and key management. Includes CORS, auth checking, and static file serving.",
+      "tags": [
+        "api-handler",
+        "controller",
+        "geo",
+        "server"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:geo-api.py:ThreadedHTTPServer",
+      "type": "class",
+      "name": "ThreadedHTTPServer",
+      "filePath": "geo-api.py",
+      "lineRange": [
+        3648,
+        3664
+      ],
+      "summary": "Threaded HTTP server wrapper that handles individual requests in separate threads for concurrent request processing.",
+      "tags": [
+        "server",
+        "utility",
+        "concurrency"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:geo-api.py:get_db",
+      "type": "function",
+      "name": "get_db",
+      "filePath": "geo-api.py",
+      "lineRange": [
+        96,
+        111
+      ],
+      "summary": "Returns a thread-local SQLite connection for the named database (osm, trails, transit, custom, elevation, cycling, addresses). Creates and configures the connection on first access per thread.",
+      "tags": [
+        "utility",
+        "database",
+        "connection"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:geo-api.py:row_to_dict",
+      "type": "function",
+      "name": "row_to_dict",
+      "filePath": "geo-api.py",
+      "lineRange": [
+        114,
+        124
+      ],
+      "summary": "Converts a sqlite3.Row to a plain dict, auto-decoding JSON strings stored in columns prefixed with 'json_'.",
+      "tags": [
+        "utility",
+        "serialization",
+        "database"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:geo-api.py:haversine",
+      "type": "function",
+      "name": "haversine",
+      "filePath": "geo-api.py",
+      "lineRange": [
+        142,
+        150
+      ],
+      "summary": "Computes the haversine distance in meters between two lat/lon coordinate pairs using the standard great-circle formula.",
+      "tags": [
+        "utility",
+        "geo",
+        "math"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:geo-api.py:province_where",
+      "type": "function",
+      "name": "province_where",
+      "filePath": "geo-api.py",
+      "lineRange": [
+        186,
+        193
+      ],
+      "summary": "Generates a SQL WHERE clause fragment that filters results to a Canadian province using its bounding box coordinates.",
+      "tags": [
+        "utility",
+        "geo",
+        "database"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:geo-api.py:_lambert_inv",
+      "type": "function",
+      "name": "_lambert_inv",
+      "filePath": "geo-api.py",
+      "lineRange": [
+        3554,
+        3589
+      ],
+      "summary": "Inverse Lambert conformal conic projection \u2014 converts easting/northing coordinates back to latitude/longitude for Canadian spatial data.",
+      "tags": [
+        "utility",
+        "geo",
+        "math",
+        "projection"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:geo-api.py:_lambert_fwd",
+      "type": "function",
+      "name": "_lambert_fwd",
+      "filePath": "geo-api.py",
+      "lineRange": [
+        3592,
+        3623
+      ],
+      "summary": "Forward Lambert conformal conic projection \u2014 converts latitude/longitude to easting/northing coordinates for Canadian spatial data processing.",
+      "tags": [
+        "utility",
+        "geo",
+        "math",
+        "projection"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:geo_api_auth.py:authenticate",
+      "type": "function",
+      "name": "authenticate",
+      "filePath": "geo_api_auth.py",
+      "lineRange": [
+        201,
+        253
+      ],
+      "summary": "Full authentication pipeline: checks public paths, whitelisted origins, private clients, extracts and validates API keys, and enforces per-key sliding-window rate limits. Returns (allowed, key_data, rate_info, error_response) tuple.",
+      "tags": [
+        "authentication",
+        "middleware",
+        "security"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:geo_api_auth.py:check_rate_limit",
+      "type": "function",
+      "name": "check_rate_limit",
+      "filePath": "geo_api_auth.py",
+      "lineRange": [
+        143,
+        176
+      ],
+      "summary": "Enforces per-key sliding-window rate limiting with periodic cleanup. Tracks request timestamps in memory and returns (allowed, remaining, reset_seconds).",
+      "tags": [
+        "rate-limiting",
+        "security",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:geo_api_auth.py:validate_key",
+      "type": "function",
+      "name": "validate_key",
+      "filePath": "geo_api_auth.py",
+      "lineRange": [
+        118,
+        140
+      ],
+      "summary": "Validates an API key against the SQLite database, checking format prefix, enabled status, and updating last_used timestamp and request count.",
+      "tags": [
+        "authentication",
+        "database",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:geo_api_auth.py:extract_key",
+      "type": "function",
+      "name": "extract_key",
+      "filePath": "geo_api_auth.py",
+      "lineRange": [
+        179,
+        198
+      ],
+      "summary": "Extracts API key from request using three strategies: Authorization Bearer header, X-API-Key header, or api_key query parameter.",
+      "tags": [
+        "authentication",
+        "parsing",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:geo_api_auth.py:_is_whitelisted_origin",
+      "type": "function",
+      "name": "_is_whitelisted_origin",
+      "filePath": "geo_api_auth.py",
+      "lineRange": [
+        82,
+        105
+      ],
+      "summary": "Checks if a request originates from a whitelisted frontend domain (ogsapps.cc subdomains) by inspecting Origin and Referer headers, allowing bypass of API key auth for first-party apps.",
+      "tags": [
+        "authentication",
+        "security",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:geo_api_auth.py:create_key",
+      "type": "function",
+      "name": "create_key",
+      "filePath": "geo_api_auth.py",
+      "lineRange": [
+        258,
+        274
+      ],
+      "summary": "Creates a new API key with specified tier (admin/pro/free) and rate limit, storing it in the SQLite database.",
+      "tags": [
+        "authentication",
+        "database",
+        "key-management"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:geo_api_auth.py:list_keys",
+      "type": "function",
+      "name": "list_keys",
+      "filePath": "geo_api_auth.py",
+      "lineRange": [
+        277,
+        293
+      ],
+      "summary": "Lists all API keys with masked key strings for safe display, including tier, rate limit, usage stats, and enabled status.",
+      "tags": [
+        "authentication",
+        "database",
+        "key-management"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:bin/elevation-arcticdem",
+      "type": "file",
+      "name": "elevation-arcticdem",
+      "filePath": "bin/elevation-arcticdem",
+      "summary": "Downloads and imports ArcticDEM 32m mosaic tiles for Arctic Canada (Nunavut, northern Manitoba/Ontario/Quebec, Labrador) from AWS S3 into the elevation database. Supports batch processing with disk checks, resumable progress, and dry-run mode.",
+      "tags": [
+        "data-pipeline",
+        "elevation",
+        "geospatial",
+        "arcticdem",
+        "batch-processing"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:bin/elevation-arcticdem:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "bin/elevation-arcticdem",
+      "lineRange": [
+        430,
+        562
+      ],
+      "summary": "Entry point that orchestrates ArcticDEM tile discovery, batch downloading, downsampling to ~23m, and import into elevation.db with progress tracking and disk monitoring.",
+      "tags": [
+        "entry-point",
+        "orchestration",
+        "batch-processing"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-arcticdem:process_batch",
+      "type": "function",
+      "name": "process_batch",
+      "filePath": "bin/elevation-arcticdem",
+      "lineRange": [
+        373,
+        418
+      ],
+      "summary": "Processes a batch of tiles with disk checking between batches, downloading each tile via thread pool and importing into the elevation database.",
+      "tags": [
+        "batch-processing",
+        "data-import",
+        "elevation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-arcticdem:download_tile",
+      "type": "function",
+      "name": "download_tile",
+      "filePath": "bin/elevation-arcticdem",
+      "lineRange": [
+        309,
+        332
+      ],
+      "summary": "Downloads a single ArcticDEM GeoTIFF tile from the AWS S3 bucket with retry logic and disk space verification.",
+      "tags": [
+        "download",
+        "s3",
+        "tile"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/elevation-arcticdem:store_in_db",
+      "type": "function",
+      "name": "store_in_db",
+      "filePath": "bin/elevation-arcticdem",
+      "lineRange": [
+        258,
+        297
+      ],
+      "summary": "Compresses and stores a downsampled elevation tile array into the SQLite elevation database with metadata.",
+      "tags": [
+        "data-import",
+        "sqlite",
+        "compression"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-arcticdem:read_arcticdem_tile",
+      "type": "function",
+      "name": "read_arcticdem_tile",
+      "filePath": "bin/elevation-arcticdem",
+      "lineRange": [
+        242,
+        248
+      ],
+      "summary": "Reads an ArcticDEM GeoTIFF file and returns a numpy array of elevation values.",
+      "tags": [
+        "geotiff",
+        "data-read",
+        "elevation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/elevation-arcticdem:list_arcticdem_tiles",
+      "type": "function",
+      "name": "list_arcticdem_tiles",
+      "filePath": "bin/elevation-arcticdem",
+      "lineRange": [
+        75,
+        180
+      ],
+      "summary": "Discovers available ArcticDEM 32m tiles by listing S3 bucket prefixes with pagination, caching results locally as JSON.",
+      "tags": [
+        "s3",
+        "tile-discovery",
+        "caching"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:bin/elevation-arcticdem-yukon",
+      "type": "file",
+      "name": "elevation-arcticdem-yukon",
+      "filePath": "bin/elevation-arcticdem-yukon",
+      "summary": "Downloads and imports ArcticDEM 10m mosaic tiles for the Yukon trail gap area (60-66\u00b0N, 126-142\u00b0W), downsampling 2x to ~20m resolution to match CDED format.",
+      "tags": [
+        "data-pipeline",
+        "elevation",
+        "geospatial",
+        "yukon",
+        "arcticdem"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:bin/elevation-arcticdem-yukon:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "bin/elevation-arcticdem-yukon",
+      "lineRange": [
+        243,
+        326
+      ],
+      "summary": "Entry point that orchestrates Yukon ArcticDEM tile discovery, download, downsampling, and import into elevation.db.",
+      "tags": [
+        "entry-point",
+        "orchestration",
+        "data-pipeline"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-arcticdem-yukon:store_in_db",
+      "type": "function",
+      "name": "store_in_db",
+      "filePath": "bin/elevation-arcticdem-yukon",
+      "lineRange": [
+        133,
+        172
+      ],
+      "summary": "Compresses and stores a downsampled Yukon ArcticDEM tile into the elevation database with WGS84 bounds.",
+      "tags": [
+        "data-import",
+        "sqlite",
+        "compression"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-arcticdem-yukon:process_tile",
+      "type": "function",
+      "name": "process_tile",
+      "filePath": "bin/elevation-arcticdem-yukon",
+      "lineRange": [
+        173,
+        242
+      ],
+      "summary": "Downloads, reads, downsamples, and imports a single ArcticDEM tile with error handling and progress tracking.",
+      "tags": [
+        "tile-processing",
+        "download",
+        "import"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:bin/elevation-build",
+      "type": "file",
+      "name": "elevation-build",
+      "filePath": "bin/elevation-build",
+      "summary": "Builds the elevation database from CDED DEM tiles in USGS DEM ASCII format. Parses A/B/C records from 1024-byte blocked files and stores compressed elevation grids in SQLite.",
+      "tags": [
+        "data-pipeline",
+        "elevation",
+        "geospatial",
+        "database-builder",
+        "cded"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:bin/elevation-build:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "bin/elevation-build",
+      "lineRange": [
+        432,
+        590
+      ],
+      "summary": "Entry point that scans for DEM/GeoTIFF files, creates the elevation database, and processes each file with progress tracking.",
+      "tags": [
+        "entry-point",
+        "orchestration",
+        "database-builder"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-build:parse_dem_file",
+      "type": "function",
+      "name": "parse_dem_file",
+      "filePath": "bin/elevation-build",
+      "lineRange": [
+        112,
+        201
+      ],
+      "summary": "Parses a CDED DEM file in USGS DEM ASCII format, extracting elevation profiles from B records and returning a grid array with metadata.",
+      "tags": [
+        "parser",
+        "dem-format",
+        "elevation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:bin/elevation-build:parse_geotiff_file",
+      "type": "function",
+      "name": "parse_geotiff_file",
+      "filePath": "bin/elevation-build",
+      "lineRange": [
+        289,
+        431
+      ],
+      "summary": "Parses a GeoTIFF elevation file, extracting elevation data and WGS84 bounds with downsampling support.",
+      "tags": [
+        "parser",
+        "geotiff",
+        "elevation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:bin/elevation-build:create_database",
+      "type": "function",
+      "name": "create_database",
+      "filePath": "bin/elevation-build",
+      "lineRange": [
+        202,
+        230
+      ],
+      "summary": "Creates the SQLite elevation database with the elevation_grid table schema.",
+      "tags": [
+        "database",
+        "schema",
+        "sqlite"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/elevation-build:store_tile",
+      "type": "function",
+      "name": "store_tile",
+      "filePath": "bin/elevation-build",
+      "lineRange": [
+        231,
+        288
+      ],
+      "summary": "Compresses and stores an elevation tile grid into the SQLite database with zlib compression.",
+      "tags": [
+        "data-import",
+        "sqlite",
+        "compression"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:bin/elevation-download",
+      "type": "file",
+      "name": "elevation-download",
+      "filePath": "bin/elevation-download",
+      "summary": "Bash script to download BC Government TRIM DEM elevation data tiles from pub.data.gov.bc.ca for all land-covering NTS letterblocks in British Columbia.",
+      "tags": [
+        "data-pipeline",
+        "elevation",
+        "download",
+        "bash",
+        "bc-trim"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:bin/elevation-download-nrcan",
+      "type": "file",
+      "name": "elevation-download-nrcan",
+      "filePath": "bin/elevation-download-nrcan",
+      "summary": "Bash script to download NRCAN CDEM elevation GeoTIFF tiles for all of Canada (excluding BC which uses TRIM data) from the federal FTP server.",
+      "tags": [
+        "data-pipeline",
+        "elevation",
+        "download",
+        "bash",
+        "nrcan"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:bin/elevation-enrich-trails",
+      "type": "file",
+      "name": "elevation-enrich-trails",
+      "filePath": "bin/elevation-enrich-trails",
+      "summary": "Enriches trail data with elevation statistics (gain, loss, difficulty) by sampling elevation along trail geometry paths using the elevation database.",
+      "tags": [
+        "data-pipeline",
+        "elevation",
+        "trails",
+        "enrichment",
+        "geospatial"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:bin/elevation-enrich-trails:ElevationQuery",
+      "type": "class",
+      "name": "ElevationQuery",
+      "filePath": "bin/elevation-enrich-trails",
+      "lineRange": [
+        32,
+        100
+      ],
+      "summary": "Direct tile-based elevation query helper with single-tile caching. Queries the elevation database at a given lat/lon by decompressing stored tiles.",
+      "tags": [
+        "elevation",
+        "query",
+        "geospatial",
+        "sqlite"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-enrich-trails:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "bin/elevation-enrich-trails",
+      "lineRange": [
+        209,
+        307
+      ],
+      "summary": "Entry point that opens both trails and elevation databases, iterates over trail groups, and enriches each with elevation gain/loss/difficulty data.",
+      "tags": [
+        "entry-point",
+        "enrichment",
+        "trails"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-enrich-trails:calc_stats",
+      "type": "function",
+      "name": "calc_stats",
+      "filePath": "bin/elevation-enrich-trails",
+      "lineRange": [
+        112,
+        133
+      ],
+      "summary": "Calculates elevation gain, loss, min, max, average, and difficulty rating from a list of elevation samples.",
+      "tags": [
+        "statistics",
+        "elevation",
+        "difficulty"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/elevation-enrich-trails:enrich_trail_group",
+      "type": "function",
+      "name": "enrich_trail_group",
+      "filePath": "bin/elevation-enrich-trails",
+      "lineRange": [
+        167,
+        196
+      ],
+      "summary": "Enriches a single trail group by sampling elevation along its path points and computing statistics.",
+      "tags": [
+        "enrichment",
+        "trails",
+        "elevation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:bin/elevation-hrdem",
+      "type": "file",
+      "name": "elevation-hrdem",
+      "filePath": "bin/elevation-hrdem",
+      "summary": "Downloads and imports NRCAN HRDEM high-resolution LiDAR tiles (1-2m native) via ArcGIS REST API, downsampling to ~23m for the elevation database. Supports town-by-town processing with resumable progress.",
+      "tags": [
+        "data-pipeline",
+        "elevation",
+        "geospatial",
+        "hrdem",
+        "lidar"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:bin/elevation-hrdem:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "bin/elevation-hrdem",
+      "lineRange": [
+        738,
+        788
+      ],
+      "summary": "Entry point with argparse CLI for processing HRDEM tiles by town, bounds, or all. Orchestrates tile discovery, download, and import.",
+      "tags": [
+        "entry-point",
+        "orchestration",
+        "cli"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-hrdem:process_town",
+      "type": "function",
+      "name": "process_town",
+      "filePath": "bin/elevation-hrdem",
+      "lineRange": [
+        603,
+        699
+      ],
+      "summary": "Downloads and imports all HRDEM tiles for a given town with per-tile error handling, disk checks, and progress checkpointing.",
+      "tags": [
+        "batch-processing",
+        "download",
+        "town-processing"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:bin/elevation-hrdem:query_arcgis_tiles",
+      "type": "function",
+      "name": "query_arcgis_tiles",
+      "filePath": "bin/elevation-hrdem",
+      "lineRange": [
+        113,
+        177
+      ],
+      "summary": "Queries the NRCan ArcGIS REST API coverage_HRDEM_en MapServer to find HRDEM tiles overlapping given geographic bounds.",
+      "tags": [
+        "arcgis",
+        "api",
+        "tile-discovery"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-hrdem:read_hrdem_tile",
+      "type": "function",
+      "name": "read_hrdem_tile",
+      "filePath": "bin/elevation-hrdem",
+      "lineRange": [
+        185,
+        275
+      ],
+      "summary": "Reads an LZW-compressed GeoTIFF HRDEM tile using Pillow, extracting elevation data and WGS84 bounds via UTM projection transform.",
+      "tags": [
+        "geotiff",
+        "parser",
+        "lidar",
+        "projection"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:bin/elevation-hrdem:downsample_hrdem",
+      "type": "function",
+      "name": "downsample_hrdem",
+      "filePath": "bin/elevation-hrdem",
+      "lineRange": [
+        350,
+        414
+      ],
+      "summary": "Downsamples HRDEM elevation data from native 1-2m resolution to ~23m using block averaging, matching CDEM database resolution.",
+      "tags": [
+        "downsampling",
+        "elevation",
+        "signal-processing"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-hrdem:store_in_db",
+      "type": "function",
+      "name": "store_in_db",
+      "filePath": "bin/elevation-hrdem",
+      "lineRange": [
+        415,
+        463
+      ],
+      "summary": "Stores a downsampled HRDEM tile into the elevation database with WGS84 bounds and source metadata.",
+      "tags": [
+        "data-import",
+        "sqlite",
+        "compression"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:bin/elevation-query",
+      "type": "file",
+      "name": "elevation-query",
+      "filePath": "bin/elevation-query",
+      "summary": "CLI tool for querying the SQLite elevation database. Supports point queries, elevation profiles between two coordinates, and bounding box queries with tile-based resolution fallback.",
+      "tags": [
+        "utility",
+        "elevation",
+        "query",
+        "geospatial",
+        "cli"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:bin/elevation-query:ElevationQuery",
+      "type": "class",
+      "name": "ElevationQuery",
+      "filePath": "bin/elevation-query",
+      "lineRange": [
+        26,
+        221
+      ],
+      "summary": "Elevation query helper with tile caching. Resolves lat/lon to elevation by finding the finest-resolution tile and computing grid indices with void-data fallback.",
+      "tags": [
+        "elevation",
+        "query",
+        "geospatial",
+        "sqlite"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Uses center-distance sorting to prefer finer-resolution HRDEM tiles over coarser CDEM tiles, falling back when LiDAR has void data."
+    },
+    {
+      "id": "function:bin/elevation-query:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "bin/elevation-query",
+      "lineRange": [
+        222,
+        272
+      ],
+      "summary": "CLI entry point with argparse subcommands for point, profile, and bbox elevation queries.",
+      "tags": [
+        "entry-point",
+        "cli",
+        "query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:bin/elevation-srtm-ukraine",
+      "type": "file",
+      "name": "elevation-srtm-ukraine",
+      "filePath": "bin/elevation-srtm-ukraine",
+      "summary": "Downloads CGIAR SRTM v4.1 3-arcsecond (~90m) elevation tiles covering Ukraine (lat 44-52, lon 22-40) and stores them in a separate elevation-ukraine.db database.",
+      "tags": [
+        "data-pipeline",
+        "elevation",
+        "geospatial",
+        "ukraine",
+        "srtm"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-srtm-ukraine:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "bin/elevation-srtm-ukraine",
+      "lineRange": [
+        182,
+        243
+      ],
+      "summary": "Entry point that iterates over Ukraine SRTM tiles, downloading and importing each with disk checks and resume support.",
+      "tags": [
+        "entry-point",
+        "data-pipeline",
+        "download"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/elevation-srtm-ukraine:download_and_import_tile",
+      "type": "function",
+      "name": "download_and_import_tile",
+      "filePath": "bin/elevation-srtm-ukraine",
+      "lineRange": [
+        130,
+        181
+      ],
+      "summary": "Downloads a single SRTM ZIP archive, extracts the GeoTIFF, reads elevation data, and imports into the SQLite database.",
+      "tags": [
+        "download",
+        "import",
+        "geotiff"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/elevation-srtm-ukraine:store_tile",
+      "type": "function",
+      "name": "store_tile",
+      "filePath": "bin/elevation-srtm-ukraine",
+      "lineRange": [
+        72,
+        129
+      ],
+      "summary": "Stores elevation tile data in the Ukraine elevation database with zlib compression and metadata.",
+      "tags": [
+        "data-import",
+        "sqlite",
+        "compression"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:bin/osm-diff-notify.py",
+      "type": "file",
+      "name": "osm-diff-notify.py",
+      "filePath": "bin/osm-diff-notify.py",
+      "summary": "Runs OSM diff updates for the bin/ context and sends heartbeat notifications to a monitoring endpoint. Companion to the deploy/ version.",
+      "tags": [
+        "osm",
+        "notification",
+        "monitoring",
+        "data-update"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:bin/osm-diff-notify.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "bin/osm-diff-notify.py",
+      "lineRange": [
+        21,
+        54
+      ],
+      "summary": "Runs the geo-update-diff command across all provinces, parses output for summary lines, and reports status via heartbeat.",
+      "tags": [
+        "entry-point",
+        "osm",
+        "diff-update"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:bin/osm-diff-notify.py:push_heartbeat",
+      "type": "function",
+      "name": "push_heartbeat",
+      "filePath": "bin/osm-diff-notify.py",
+      "lineRange": [
+        10,
+        19
+      ],
+      "summary": "Sends a heartbeat status notification via HTTP POST to a monitoring endpoint.",
+      "tags": [
+        "notification",
+        "monitoring",
+        "http"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:deploy/cloudflared-config.yml",
+      "type": "config",
+      "name": "cloudflared-config.yml",
+      "filePath": "deploy/cloudflared-config.yml",
+      "summary": "Cloudflare tunnel configuration routing maps.ogsapps.cc hostname to localhost:8090 (geo-api service) with a 404 catch-all fallback.",
+      "tags": [
+        "configuration",
+        "cloudflare",
+        "tunnel",
+        "networking"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:deploy/cloudflared.container",
+      "type": "service",
+      "name": "cloudflared.container",
+      "filePath": "deploy/cloudflared.container",
+      "summary": "Podman quadlet for the Cloudflare tunnel daemon. Shares the geo-api container's network namespace and runs in token mode after geo-api starts.",
+      "tags": [
+        "containerization",
+        "infrastructure",
+        "cloudflare",
+        "deployment"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:deploy/geo-api.container",
+      "type": "service",
+      "name": "geo-api.container",
+      "filePath": "deploy/geo-api.container",
+      "summary": "Podman quadlet for the main geo-api service. Runs Python 3.12 with the geo-api.py server on port 8090, mounting data volumes and web assets.",
+      "tags": [
+        "containerization",
+        "infrastructure",
+        "deployment",
+        "api"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:deploy/geo-osm-diff.service",
+      "type": "service",
+      "name": "geo-osm-diff.service",
+      "filePath": "deploy/geo-osm-diff.service",
+      "summary": "systemd oneshot service that runs the OSM diff update notification script for all Canadian provinces/territories.",
+      "tags": [
+        "infrastructure",
+        "systemd",
+        "osm",
+        "scheduling"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:deploy/geo-osm-diff.timer",
+      "type": "service",
+      "name": "geo-osm-diff.timer",
+      "filePath": "deploy/geo-osm-diff.timer",
+      "summary": "systemd timer that triggers the OSM diff update service monthly on the 1st at 02:00 Pacific time.",
+      "tags": [
+        "infrastructure",
+        "systemd",
+        "scheduling",
+        "osm"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:deploy/ogs-api.container",
+      "type": "service",
+      "name": "ogs-api.container",
+      "filePath": "deploy/ogs-api.container",
+      "summary": "Podman quadlet for the OGS API proxy service. Runs Python 3.12 with ogs-api.py on port 8091 for external API endpoints.",
+      "tags": [
+        "containerization",
+        "infrastructure",
+        "deployment",
+        "api"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:deploy/osm-diff-notify.py",
+      "type": "file",
+      "name": "osm-diff-notify.py",
+      "filePath": "deploy/osm-diff-notify.py",
+      "summary": "Runs OSM diff updates via podman exec and posts formatted results to Mattermost. Companion to the systemd timer/service files.",
+      "tags": [
+        "osm",
+        "notification",
+        "monitoring",
+        "mattermost"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:deploy/osm-diff-notify.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "deploy/osm-diff-notify.py",
+      "lineRange": [
+        21,
+        46
+      ],
+      "summary": "Executes OSM diff updates inside the geo-api container, parses the output, and posts a formatted summary to Mattermost with status icons.",
+      "tags": [
+        "entry-point",
+        "osm",
+        "notification",
+        "mattermost"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:deploy/osm-diff-notify.py:post_mm",
+      "type": "function",
+      "name": "post_mm",
+      "filePath": "deploy/osm-diff-notify.py",
+      "lineRange": [
+        11,
+        19
+      ],
+      "summary": "Posts a message to Mattermost via curl with authentication, returning the HTTP status code.",
+      "tags": [
+        "notification",
+        "mattermost",
+        "http"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:ogs-api.py",
+      "type": "file",
+      "name": "ogs-api.py",
+      "filePath": "ogs-api.py",
+      "summary": "OGS external API proxy service running on port 8091. Provides GDELT breaking news and wttr.in weather proxy endpoints with CORS support.",
+      "tags": [
+        "api-handler",
+        "proxy",
+        "service",
+        "entry-point"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:ogs-api.py:OgsAPIHandler",
+      "type": "class",
+      "name": "OgsAPIHandler",
+      "filePath": "ogs-api.py",
+      "lineRange": [
+        26,
+        107
+      ],
+      "summary": "HTTP request handler for the OGS API proxy with endpoints for GDELT breaking news and wttr.in weather lookups, with JSON error responses.",
+      "tags": [
+        "api-handler",
+        "proxy",
+        "http-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:ogs-api.py:ThreadedHTTPServer",
+      "type": "class",
+      "name": "ThreadedHTTPServer",
+      "filePath": "ogs-api.py",
+      "lineRange": [
+        110,
+        123
+      ],
+      "summary": "Threaded HTTP server that spawns a new thread per request for concurrent handling of API requests.",
+      "tags": [
+        "http-server",
+        "threading",
+        "infrastructure"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Project documentation for the Geo API \u2014 a Python geospatial API backend covering trails, cycling, elevation, transit, OSM POIs, and address geocoding. Documents architecture, deployment, auth, databases, and frontend apps.",
+      "tags": [
+        "documentation",
+        "entry-point",
+        "overview",
+        "architecture"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:web/roads/index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "web/roads/index.html",
+      "summary": "Single-page BC Road Conditions map application built with Leaflet.js and OSRM routing. Features road surface overlays, weather layers, routing, and dark theme UI served directly by the geo-api host-based routing.",
+      "tags": [
+        "frontend",
+        "map",
+        "leaflet",
+        "routing",
+        "visualization"
+      ],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "file:geo_api_auth.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "file:geo_api_auth.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "class:bin/geo-api.py:GeoAPIHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "class:bin/geo-api.py:ThreadedHTTPServer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:get_db",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:row_to_dict",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:haversine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:province_where",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:_lambert_inv",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:_lambert_fwd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "class:geo-api.py:GeoAPIHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "class:geo-api.py:ThreadedHTTPServer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:get_db",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:row_to_dict",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:haversine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:province_where",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:_lambert_inv",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:_lambert_fwd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:authenticate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:check_rate_limit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:validate_key",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:extract_key",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:_is_whitelisted_origin",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:create_key",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:list_keys",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "class:bin/geo-api.py:GeoAPIHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "class:bin/geo-api.py:ThreadedHTTPServer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:get_db",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:row_to_dict",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:haversine",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:province_where",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:_lambert_inv",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "function:bin/geo-api.py:_lambert_fwd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "class:geo-api.py:GeoAPIHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "class:geo-api.py:ThreadedHTTPServer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:get_db",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:row_to_dict",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:haversine",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:province_where",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:_lambert_inv",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "function:geo-api.py:_lambert_fwd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:authenticate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:check_rate_limit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:validate_key",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:extract_key",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:_is_whitelisted_origin",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:create_key",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo_api_auth.py",
+      "target": "function:geo_api_auth.py:list_keys",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:geo-api.py:GeoAPIHandler",
+      "target": "function:geo_api_auth.py:authenticate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:bin/geo-api.py:GeoAPIHandler",
+      "target": "function:geo_api_auth.py:authenticate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "file:geo_api_auth.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:bin/geo-api.py",
+      "target": "file:geo_api_auth.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:geo-api.py",
+      "target": "file:bin/geo-api.py",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:bin/elevation-arcticdem",
+      "target": "function:bin/elevation-arcticdem:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-arcticdem",
+      "target": "function:bin/elevation-arcticdem:process_batch",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-arcticdem",
+      "target": "function:bin/elevation-arcticdem:download_tile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-arcticdem",
+      "target": "function:bin/elevation-arcticdem:store_in_db",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-arcticdem",
+      "target": "function:bin/elevation-arcticdem:read_arcticdem_tile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-arcticdem",
+      "target": "function:bin/elevation-arcticdem:list_arcticdem_tiles",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-arcticdem-yukon",
+      "target": "function:bin/elevation-arcticdem-yukon:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-arcticdem-yukon",
+      "target": "function:bin/elevation-arcticdem-yukon:store_in_db",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-arcticdem-yukon",
+      "target": "function:bin/elevation-arcticdem-yukon:process_tile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-build",
+      "target": "function:bin/elevation-build:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-build",
+      "target": "function:bin/elevation-build:parse_dem_file",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-build",
+      "target": "function:bin/elevation-build:parse_geotiff_file",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-build",
+      "target": "function:bin/elevation-build:create_database",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-build",
+      "target": "function:bin/elevation-build:store_tile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-enrich-trails",
+      "target": "class:bin/elevation-enrich-trails:ElevationQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-enrich-trails",
+      "target": "function:bin/elevation-enrich-trails:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-enrich-trails",
+      "target": "function:bin/elevation-enrich-trails:calc_stats",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-enrich-trails",
+      "target": "function:bin/elevation-enrich-trails:enrich_trail_group",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-hrdem",
+      "target": "function:bin/elevation-hrdem:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-hrdem",
+      "target": "function:bin/elevation-hrdem:process_town",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-hrdem",
+      "target": "function:bin/elevation-hrdem:query_arcgis_tiles",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-hrdem",
+      "target": "function:bin/elevation-hrdem:read_hrdem_tile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-hrdem",
+      "target": "function:bin/elevation-hrdem:downsample_hrdem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-hrdem",
+      "target": "function:bin/elevation-hrdem:store_in_db",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-query",
+      "target": "class:bin/elevation-query:ElevationQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-query",
+      "target": "function:bin/elevation-query:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-srtm-ukraine",
+      "target": "function:bin/elevation-srtm-ukraine:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-srtm-ukraine",
+      "target": "function:bin/elevation-srtm-ukraine:download_and_import_tile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/elevation-srtm-ukraine",
+      "target": "function:bin/elevation-srtm-ukraine:store_tile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/osm-diff-notify.py",
+      "target": "function:bin/osm-diff-notify.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:bin/osm-diff-notify.py",
+      "target": "function:bin/osm-diff-notify.py:push_heartbeat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/osm-diff-notify.py",
+      "target": "function:deploy/osm-diff-notify.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:deploy/osm-diff-notify.py",
+      "target": "function:deploy/osm-diff-notify.py:post_mm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:ogs-api.py",
+      "target": "class:ogs-api.py:OgsAPIHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:ogs-api.py",
+      "target": "class:ogs-api.py:ThreadedHTTPServer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:ogs-api.py",
+      "target": "class:ogs-api.py:OgsAPIHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:ogs-api.py",
+      "target": "class:ogs-api.py:ThreadedHTTPServer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:bin/osm-diff-notify.py",
+      "target": "function:bin/osm-diff-notify.py:push_heartbeat",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:bin/osm-diff-notify.py",
+      "target": "function:bin/osm-diff-notify.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:deploy/osm-diff-notify.py",
+      "target": "function:deploy/osm-diff-notify.py:post_mm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:deploy/osm-diff-notify.py",
+      "target": "function:deploy/osm-diff-notify.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "config:deploy/cloudflared-config.yml",
+      "target": "service:deploy/cloudflared.container",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:deploy/cloudflared.container",
+      "target": "service:deploy/geo-api.container",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:deploy/geo-api.container",
+      "target": "file:bin/geo-api.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:deploy/geo-api.container",
+      "target": "file:web/roads/index.html",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:deploy/ogs-api.container",
+      "target": "file:ogs-api.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:deploy/geo-osm-diff.timer",
+      "target": "service:deploy/geo-osm-diff.service",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:deploy/geo-osm-diff.service",
+      "target": "file:deploy/osm-diff-notify.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:deploy/geo-osm-diff.service",
+      "target": "file:bin/osm-diff-notify.py",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:bin/geo-api.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:geo_api_auth.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "service:deploy/geo-api.container",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "service:deploy/geo-osm-diff.timer",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:deploy/osm-diff-notify.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:bin/elevation-arcticdem",
+      "target": "file:bin/elevation-build",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:bin/elevation-arcticdem-yukon",
+      "target": "file:bin/elevation-arcticdem",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:bin/elevation-download",
+      "target": "file:bin/elevation-build",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:bin/elevation-download-nrcan",
+      "target": "file:bin/elevation-build",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:bin/elevation-enrich-trails",
+      "target": "file:bin/elevation-query",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:bin/elevation-hrdem",
+      "target": "file:bin/elevation-build",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:bin/elevation-srtm-ukraine",
+      "target": "file:bin/elevation-build",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:deploy/osm-diff-notify.py",
+      "target": "file:bin/osm-diff-notify.py",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:infrastructure-deployment",
+      "name": "Infrastructure & Deployment",
+      "description": "Container definitions, systemd services/timers, and Cloudflare tunnel configuration. Defines how the API server and proxy are deployed and scheduled.",
+      "order": 0,
+      "type": "infrastructure",
+      "nodes": [
+        "config:deploy/cloudflared-config.yml",
+        "service:deploy/cloudflared.container",
+        "service:deploy/geo-api.container",
+        "service:deploy/ogs-api.container",
+        "service:deploy/geo-osm-diff.service",
+        "service:deploy/geo-osm-diff.timer",
+        "file:deploy/osm-diff-notify.py",
+        "function:deploy/osm-diff-notify.py:main",
+        "function:deploy/osm-diff-notify.py:post_mm"
+      ],
+      "files": [
+        "deploy/cloudflared-config.yml",
+        "deploy/cloudflared.container",
+        "deploy/geo-api.container",
+        "deploy/ogs-api.container",
+        "deploy/geo-osm-diff.service",
+        "deploy/geo-osm-diff.timer",
+        "deploy/osm-diff-notify.py"
+      ],
+      "dependencies": {
+        "deploys": [
+          "layer:core-api",
+          "layer:external-proxy",
+          "layer:data-pipeline"
+        ],
+        "depends_on": []
+      }
+    },
+    {
+      "id": "layer:data-pipeline",
+      "name": "Elevation Data Pipeline & ETL",
+      "description": "Independent CLI scripts that download, parse, downsample, and import elevation data from multiple sources (CDED, ArcticDEM, HRDEM, SRTM) into SQLite databases shared with the API server. Includes build, download, query, and trail enrichment scripts.",
+      "order": 1,
+      "type": "data-pipeline",
+      "nodes": [
+        "file:bin/elevation-download",
+        "file:bin/elevation-download-nrcan",
+        "file:bin/elevation-build",
+        "function:bin/elevation-build:main",
+        "function:bin/elevation-build:parse_dem_file",
+        "function:bin/elevation-build:parse_geotiff_file",
+        "function:bin/elevation-build:create_database",
+        "function:bin/elevation-build:store_tile",
+        "file:bin/elevation-arcticdem",
+        "function:bin/elevation-arcticdem:main",
+        "function:bin/elevation-arcticdem:process_batch",
+        "function:bin/elevation-arcticdem:download_tile",
+        "function:bin/elevation-arcticdem:store_in_db",
+        "function:bin/elevation-arcticdem:read_arcticdem_tile",
+        "function:bin/elevation-arcticdem:list_arcticdem_tiles",
+        "file:bin/elevation-arcticdem-yukon",
+        "function:bin/elevation-arcticdem-yukon:main",
+        "function:bin/elevation-arcticdem-yukon:store_in_db",
+        "function:bin/elevation-arcticdem-yukon:process_tile",
+        "file:bin/elevation-hrdem",
+        "function:bin/elevation-hrdem:main",
+        "function:bin/elevation-hrdem:process_town",
+        "function:bin/elevation-hrdem:query_arcgis_tiles",
+        "function:bin/elevation-hrdem:read_hrdem_tile",
+        "function:bin/elevation-hrdem:downsample_hrdem",
+        "function:bin/elevation-hrdem:store_in_db",
+        "file:bin/elevation-srtm-ukraine",
+        "function:bin/elevation-srtm-ukraine:main",
+        "function:bin/elevation-srtm-ukraine:download_and_import_tile",
+        "function:bin/elevation-srtm-ukraine:store_tile",
+        "file:bin/elevation-enrich-trails",
+        "class:bin/elevation-enrich-trails:ElevationQuery",
+        "function:bin/elevation-enrich-trails:main",
+        "function:bin/elevation-enrich-trails:calc_stats",
+        "function:bin/elevation-enrich-trails:enrich_trail_group",
+        "file:bin/elevation-query",
+        "class:bin/elevation-query:ElevationQuery",
+        "function:bin/elevation-query:main"
+      ],
+      "files": [
+        "bin/elevation-download",
+        "bin/elevation-download-nrcan",
+        "bin/elevation-build",
+        "bin/elevation-arcticdem",
+        "bin/elevation-arcticdem-yukon",
+        "bin/elevation-hrdem",
+        "bin/elevation-srtm-ukraine",
+        "bin/elevation-enrich-trails",
+        "bin/elevation-query"
+      ],
+      "dependencies": {
+        "deploys": [],
+        "depends_on": [],
+        "shares_databases_with": [
+          "layer:core-api"
+        ],
+        "notes": "Pipeline scripts share SQLite database schemas (elevation.db, trails.db) with the API server but have no code-level imports. They form a related chain: download scripts fetch raw data \u2192 elevation-build creates the DB \u2192 arcticdem/hrdem/srtm scripts add more tiles \u2192 elevation-enrich-trails cross-references trails with elevation \u2192 elevation-query is a CLI inspection tool."
+      }
+    },
+    {
+      "id": "layer:osm-update",
+      "name": "OSM Data Update",
+      "description": "Script for running OSM diff updates and sending heartbeat/notifications. The bin/ version runs inside the container; the deploy/ version triggers via podman exec and posts to Mattermost.",
+      "order": 2,
+      "type": "data-pipeline",
+      "nodes": [
+        "file:bin/osm-diff-notify.py",
+        "function:bin/osm-diff-notify.py:main",
+        "function:bin/osm-diff-notify.py:push_heartbeat"
+      ],
+      "files": [
+        "bin/osm-diff-notify.py"
+      ],
+      "dependencies": {
+        "deploys": [],
+        "depends_on": [],
+        "shares_databases_with": [
+          "layer:core-api"
+        ],
+        "notes": "Runs OSM diff updates via external geo-update-diff tool, modifying the same osm.db consumed by the API server."
+      }
+    },
+    {
+      "id": "layer:authentication",
+      "name": "Authentication & Rate Limiting",
+      "description": "Extracted authentication module providing API key validation, per-key sliding-window rate limiting, whitelisted origin bypass, and full CRUD key management backed by SQLite.",
+      "order": 3,
+      "type": "middleware",
+      "nodes": [
+        "file:geo_api_auth.py",
+        "function:geo_api_auth.py:authenticate",
+        "function:geo_api_auth.py:check_rate_limit",
+        "function:geo_api_auth.py:validate_key",
+        "function:geo_api_auth.py:extract_key",
+        "function:geo_api_auth.py:_is_whitelisted_origin",
+        "function:geo_api_auth.py:create_key",
+        "function:geo_api_auth.py:list_keys"
+      ],
+      "files": [
+        "geo_api_auth.py"
+      ],
+      "dependencies": {
+        "deploys": [],
+        "depends_on": [],
+        "consumed_by": [
+          "layer:core-api"
+        ]
+      }
+    },
+    {
+      "id": "layer:core-api",
+      "name": "Core API Server",
+      "description": "The main monolithic geospatial API server. A single 3690-line Python file using http.server.BaseHTTPRequestHandler with 74 endpoint methods covering trails, cycling, elevation, transit, OSM POIs, geocoding, weather, ferries, sea navigation, roads, and mining. Includes thread-local SQLite connections, in-memory caches, haversine distance, and Lambert projection math. Two copies exist (root and bin/) that are nearly identical.",
+      "order": 4,
+      "type": "api-server",
+      "nodes": [
+        "file:geo-api.py",
+        "class:geo-api.py:GeoAPIHandler",
+        "class:geo-api.py:ThreadedHTTPServer",
+        "function:geo-api.py:get_db",
+        "function:geo-api.py:row_to_dict",
+        "function:geo-api.py:haversine",
+        "function:geo-api.py:province_where",
+        "function:geo-api.py:_lambert_inv",
+        "function:geo-api.py:_lambert_fwd",
+        "file:bin/geo-api.py",
+        "class:bin/geo-api.py:GeoAPIHandler",
+        "class:bin/geo-api.py:ThreadedHTTPServer",
+        "function:bin/geo-api.py:get_db",
+        "function:bin/geo-api.py:row_to_dict",
+        "function:bin/geo-api.py:haversine",
+        "function:bin/geo-api.py:province_where",
+        "function:bin/geo-api.py:_lambert_inv",
+        "function:bin/geo-api.py:_lambert_fwd"
+      ],
+      "files": [
+        "geo-api.py",
+        "bin/geo-api.py"
+      ],
+      "dependencies": {
+        "deploys": [],
+        "depends_on": [
+          "layer:authentication"
+        ],
+        "serves": [
+          "layer:frontend"
+        ]
+      },
+      "internalSubLayers": [
+        {
+          "name": "Utility Functions",
+          "description": "Standalone helper functions: get_db (thread-local SQLite connections), row_to_dict (row serialization with JSON decode), haversine (great-circle distance), province_where (SQL bounding box), _lambert_inv/_lambert_fwd (Lambert conformal conic projection).",
+          "nodes": [
+            "function:geo-api.py:get_db",
+            "function:geo-api.py:row_to_dict",
+            "function:geo-api.py:haversine",
+            "function:geo-api.py:province_where",
+            "function:geo-api.py:_lambert_inv",
+            "function:geo-api.py:_lambert_fwd",
+            "function:bin/geo-api.py:get_db",
+            "function:bin/geo-api.py:row_to_dict",
+            "function:bin/geo-api.py:haversine",
+            "function:bin/geo-api.py:province_where",
+            "function:bin/geo-api.py:_lambert_inv",
+            "function:bin/geo-api.py:_lambert_fwd"
+          ]
+        },
+        {
+          "name": "HTTP Server Infrastructure",
+          "description": "ThreadedHTTPServer class that wraps BaseHTTPRequestHandler with per-request threading.",
+          "nodes": [
+            "class:geo-api.py:ThreadedHTTPServer",
+            "class:bin/geo-api.py:ThreadedHTTPServer"
+          ]
+        },
+        {
+          "name": "Request Handler / Controller",
+          "description": "GeoAPIHandler monolith containing all 74 endpoint methods. Acts as router, controller, and data access layer combined.",
+          "nodes": [
+            "class:geo-api.py:GeoAPIHandler",
+            "class:bin/geo-api.py:GeoAPIHandler"
+          ]
+        }
+      ],
+      "notes": "geo-api.py and bin/geo-api.py are near-duplicates. The bin/ copy is the one deployed in the container. The root copy may be for local development."
+    },
+    {
+      "id": "layer:external-proxy",
+      "name": "External API Proxy",
+      "description": "Lightweight sidecar service (ogs-api.py) running on port 8091 that proxies GDELT breaking news and wttr.in weather requests with CORS support.",
+      "order": 5,
+      "type": "api-server",
+      "nodes": [
+        "file:ogs-api.py",
+        "class:ogs-api.py:OgsAPIHandler",
+        "class:ogs-api.py:ThreadedHTTPServer"
+      ],
+      "files": [
+        "ogs-api.py"
+      ],
+      "dependencies": {
+        "deploys": [],
+        "depends_on": [],
+        "notes": "Completely independent service with no code-level dependencies on the core API or auth module."
+      }
+    },
+    {
+      "id": "layer:frontend",
+      "name": "Frontend Web Application",
+      "description": "Single-page BC Road Conditions map application built with Leaflet.js and OSRM routing. Served as static files by the core API server.",
+      "order": 6,
+      "type": "frontend",
+      "nodes": [
+        "file:web/roads/index.html"
+      ],
+      "files": [
+        "web/roads/index.html"
+      ],
+      "dependencies": {
+        "deploys": [],
+        "depends_on": [
+          "layer:core-api"
+        ]
+      }
+    },
+    {
+      "id": "layer:documentation",
+      "name": "Documentation",
+      "description": "Project README documenting architecture, deployment, auth, databases, and frontend apps.",
+      "order": 7,
+      "type": "documentation",
+      "nodes": [
+        "document:README.md"
+      ],
+      "files": [
+        "README.md"
+      ],
+      "dependencies": {
+        "deploys": [],
+        "depends_on": [],
+        "documents": [
+          "layer:core-api",
+          "layer:authentication",
+          "layer:infrastructure-deployment"
+        ]
+      }
+    }
+  ],
+  "architecture": "single-file-monolith-with-pipelines",
+  "architectureNotes": "The project follows a single-file monolith pattern for the API server, with all HTTP routing, business logic, and data access in one 3690-line file. The only extracted module is geo_api_auth.py for authentication/rate-limiting. Data pipelines are independent CLI scripts that share SQLite database schemas with the API server. Infrastructure is defined as Podman quadlets and systemd units.",
+  "tour": [
+    {
+      "order": 1,
+      "title": "Project Overview",
+      "description": "Start with the README to understand the Geo API's purpose \u2014 a Python geospatial backend covering trails, cycling, elevation, transit, OSM POIs, and address geocoding across Canada. This document outlines the monolithic architecture, deployment model, authentication, SQLite databases, and the family of frontend apps that consume the API. It provides the essential mental map before diving into any code.",
+      "nodeIds": [
+        "document:README.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "API Server Entry Point",
+      "description": "The root geo-api.py is the main server file \u2014 a 3690-line monolith that handles all 30+ REST endpoints. It uses Python's stdlib http.server rather than a framework like Flask, which means the entire HTTP routing, request parsing, and response formatting is handled inline. This file has the highest fan-out in the codebase (19 edges), touching every subsystem. Reading the top-level imports and the if __name__ block gives you the full runtime picture.",
+      "nodeIds": [
+        "file:geo-api.py"
+      ],
+      "languageLesson": "Python's http.server.BaseHTTPRequestHandler requires manual routing via do_GET/do_POST methods with path parsing \u2014 unlike decorator-based frameworks. This monolith uses thread-local storage (threading.local()) to manage per-thread SQLite connections, a pattern critical for concurrent request handling without connection leaks."
+    },
+    {
+      "order": 3,
+      "title": "Database & Utility Layer",
+      "description": "Before understanding the request handler, learn the three utility functions it depends on everywhere. get_db() returns thread-local SQLite connections to the seven databases (osm, trails, transit, custom, elevation, cycling, addresses). row_to_dict() converts sqlite3.Row objects to dicts with automatic JSON column decoding. haversine() computes great-circle distance between coordinate pairs \u2014 the foundation for all 'find nearby' endpoints.",
+      "nodeIds": [
+        "function:geo-api.py:get_db",
+        "function:geo-api.py:row_to_dict",
+        "function:geo-api.py:haversine"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "The Monolithic Request Handler",
+      "description": "GeoAPIHandler is the heart of the server \u2014 a single class spanning 3300+ lines that extends BaseHTTPRequestHandler. It dispatches every endpoint: places search, trail queries, transit schedules, geocoding, weather, BC Ferries, sea navigation, cycling routes, road events, and mining data. Understanding its do_GET/do_POST methods reveals the full URL routing pattern and how each endpoint extracts parameters, queries the appropriate SQLite database, and returns JSON.",
+      "nodeIds": [
+        "class:geo-api.py:GeoAPIHandler"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "Authentication & Rate Limiting",
+      "description": "The geo_api_auth.py module is the most depended-upon file in the codebase (fan-in of 5). The GeoAPIHandler calls authenticate() on every request, which runs the full security pipeline: checking public paths, whitelisted origins (ogsapps.cc subdomains), extracting API keys from headers or query params, validating keys against SQLite, and enforcing per-key sliding-window rate limits. This module also provides key management CRUD for admin endpoints.",
+      "nodeIds": [
+        "file:geo_api_auth.py",
+        "function:geo_api_auth.py:authenticate"
+      ],
+      "languageLesson": "The sliding-window rate limiter stores request timestamps in an in-memory dict per API key, periodically pruning old entries. This is a simple but effective pattern for per-client throttling without external infrastructure like Redis."
+    },
+    {
+      "order": 6,
+      "title": "Geospatial Projections",
+      "description": "Two specialized math functions handle coordinate transformations for Canadian spatial data. _lambert_fwd converts lat/lon to easting/northing using the Lambert conformal conic projection, while _lambert_inv does the reverse. The province_where() function generates SQL WHERE clauses that filter results to a province using its bounding box. Together these power the geospatial query capabilities that distinguish this API from a simple CRUD service.",
+      "nodeIds": [
+        "function:geo-api.py:_lambert_fwd",
+        "function:geo-api.py:_lambert_inv",
+        "function:geo-api.py:province_where"
+      ],
+      "languageLesson": "The Lambert conformal conic projection is standard for Canadian mapping (used by NRCan and Statistics Canada). It preserves shapes and angles locally, making it ideal for the mid-latitude spanning of Canada's provinces \u2014 unlike Mercator which distorts high latitudes severely."
+    },
+    {
+      "order": 7,
+      "title": "Threaded Server Infrastructure",
+      "description": "ThreadedHTTPServer is a thin wrapper around Python's HTTPServer that uses ThreadingMixIn to spawn a new thread per request. This is what enables the monolith to handle concurrent API calls \u2014 each request gets its own thread with its own thread-local SQLite connections (from Step 3's get_db). This design trades memory for simplicity, avoiding async complexity while still supporting parallel queries.",
+      "nodeIds": [
+        "class:geo-api.py:ThreadedHTTPServer"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "Elevation Database Builder",
+      "description": "The elevation-build script is the foundational pipeline for the entire elevation subsystem (fan-in of 5 from related scripts). It parses CDED DEM ASCII files and GeoTIFF elevation tiles, compresses the data with zlib, and stores it in SQLite's elevation_grid table. Understanding this script reveals the tile schema \u2014 bounds, resolution, compressed data \u2014 that every other elevation tool and the API's elevation endpoint relies on.",
+      "nodeIds": [
+        "file:bin/elevation-build"
+      ],
+      "languageLesson": "CDED (Canadian Digital Elevation Data) uses USGS DEM ASCII format with 1024-byte blocked A/B/C records. The parser extracts B-record elevation profiles and restructures them into a grid. GeoTIFF parsing uses GDAL-style affine transforms to convert pixel coordinates to WGS84 lat/lon bounds."
+    },
+    {
+      "order": 9,
+      "title": "Elevation Data Source Pipelines",
+      "description": "Multiple data source scripts feed into the elevation database built in Step 8. elevation-arcticdem downloads ArcticDEM 32m tiles from AWS S3 for Arctic Canada. elevation-hrdem fetches high-resolution LiDAR data (1-2m native, downsampled to ~23m) via the NRCan ArcGIS REST API. Each follows the same pattern: discover tiles, download with retry, downsample, compress, and store. The elevation-srtm-ukraine script follows the same pattern for a separate Ukraine dataset.",
+      "nodeIds": [
+        "file:bin/elevation-arcticdem",
+        "file:bin/elevation-hrdem"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "Elevation Query & Trail Enrichment",
+      "description": "The elevation-query CLI tool contains the ElevationQuery class that resolves any lat/lon to an elevation value by finding the finest-resolution tile, decompressing it, and computing grid indices. It prefers HRDEM LiDAR tiles over coarser CDEM when available, with void-data fallback. The elevation-enrich-trails script uses this same tile-based query approach to sample elevation along trail geometry paths, computing gain, loss, difficulty ratings that appear in the API's trail endpoints.",
+      "nodeIds": [
+        "file:bin/elevation-query",
+        "file:bin/elevation-enrich-trails"
+      ]
+    },
+    {
+      "order": 11,
+      "title": "OSM Updates & External API Proxy",
+      "description": "The osm-diff-notify.py script (in both bin/ and deploy/ variants) runs OSM diff updates for all Canadian provinces, posting results to Mattermost or a heartbeat endpoint. It bridges the gap between live OpenStreetMap data and the static SQLite databases the API queries. The ogs-api.py is a separate lightweight proxy on port 8091 that forwards requests to GDELT breaking news and wttr.in weather services \u2014 the only other Python server in the stack.",
+      "nodeIds": [
+        "file:deploy/osm-diff-notify.py",
+        "file:ogs-api.py"
+      ]
+    },
+    {
+      "order": 12,
+      "title": "Containerization & Deployment",
+      "description": "The deploy/ directory contains the full production infrastructure: geo-api.container is a Podman quadlet running Python 3.12 with the geo-api.py server on port 8090; cloudflared.container runs the Cloudflare tunnel daemon that exposes the service via maps.ogsapps.cc; ogs-api.container runs the external API proxy on port 8091. The geo-osm-diff.timer triggers monthly OSM data updates. The web/roads/index.html is a Leaflet.js map application served directly by the geo-api, completing the picture of how all components fit together in production.",
+      "nodeIds": [
+        "service:deploy/geo-api.container",
+        "config:deploy/cloudflared-config.yml",
+        "service:deploy/cloudflared.container",
+        "service:deploy/geo-osm-diff.timer",
+        "file:web/roads/index.html"
+      ],
+      "languageLesson": "Podman quadlets are systemd unit files that define container workloads \u2014 an alternative to docker-compose that integrates directly with systemd for lifecycle management. The cloudflared tunnel replaces traditional reverse proxies by creating an outbound-only connection to Cloudflare's network, eliminating the need to expose ports publicly."
+    }
+  ],
+  "meta": {
+    "projectName": "geo-api",
+    "nodeCount": 81,
+    "edgeCount": 115,
+    "layerCount": 8,
+    "tourStepCount": 12
+  }
+}
