@@ -2143,9 +2143,7 @@
       "id": "layer:infrastructure-deployment",
       "name": "Infrastructure & Deployment",
       "description": "Container definitions, systemd services/timers, and Cloudflare tunnel configuration. Defines how the API server and proxy are deployed and scheduled.",
-      "order": 0,
-      "type": "infrastructure",
-      "nodes": [
+      "nodeIds": [
         "config:deploy/cloudflared-config.yml",
         "service:deploy/cloudflared.container",
         "service:deploy/geo-api.container",
@@ -2155,32 +2153,13 @@
         "file:deploy/osm-diff-notify.py",
         "function:deploy/osm-diff-notify.py:main",
         "function:deploy/osm-diff-notify.py:post_mm"
-      ],
-      "files": [
-        "deploy/cloudflared-config.yml",
-        "deploy/cloudflared.container",
-        "deploy/geo-api.container",
-        "deploy/ogs-api.container",
-        "deploy/geo-osm-diff.service",
-        "deploy/geo-osm-diff.timer",
-        "deploy/osm-diff-notify.py"
-      ],
-      "dependencies": {
-        "deploys": [
-          "layer:core-api",
-          "layer:external-proxy",
-          "layer:data-pipeline"
-        ],
-        "depends_on": []
-      }
+      ]
     },
     {
       "id": "layer:data-pipeline",
       "name": "Elevation Data Pipeline & ETL",
       "description": "Independent CLI scripts that download, parse, downsample, and import elevation data from multiple sources (CDED, ArcticDEM, HRDEM, SRTM) into SQLite databases shared with the API server. Includes build, download, query, and trail enrichment scripts.",
-      "order": 1,
-      "type": "data-pipeline",
-      "nodes": [
+      "nodeIds": [
         "file:bin/elevation-download",
         "file:bin/elevation-download-nrcan",
         "file:bin/elevation-build",
@@ -2219,57 +2198,23 @@
         "file:bin/elevation-query",
         "class:bin/elevation-query:ElevationQuery",
         "function:bin/elevation-query:main"
-      ],
-      "files": [
-        "bin/elevation-download",
-        "bin/elevation-download-nrcan",
-        "bin/elevation-build",
-        "bin/elevation-arcticdem",
-        "bin/elevation-arcticdem-yukon",
-        "bin/elevation-hrdem",
-        "bin/elevation-srtm-ukraine",
-        "bin/elevation-enrich-trails",
-        "bin/elevation-query"
-      ],
-      "dependencies": {
-        "deploys": [],
-        "depends_on": [],
-        "shares_databases_with": [
-          "layer:core-api"
-        ],
-        "notes": "Pipeline scripts share SQLite database schemas (elevation.db, trails.db) with the API server but have no code-level imports. They form a related chain: download scripts fetch raw data \u2192 elevation-build creates the DB \u2192 arcticdem/hrdem/srtm scripts add more tiles \u2192 elevation-enrich-trails cross-references trails with elevation \u2192 elevation-query is a CLI inspection tool."
-      }
+      ]
     },
     {
       "id": "layer:osm-update",
       "name": "OSM Data Update",
       "description": "Script for running OSM diff updates and sending heartbeat/notifications. The bin/ version runs inside the container; the deploy/ version triggers via podman exec and posts to Mattermost.",
-      "order": 2,
-      "type": "data-pipeline",
-      "nodes": [
+      "nodeIds": [
         "file:bin/osm-diff-notify.py",
         "function:bin/osm-diff-notify.py:main",
         "function:bin/osm-diff-notify.py:push_heartbeat"
-      ],
-      "files": [
-        "bin/osm-diff-notify.py"
-      ],
-      "dependencies": {
-        "deploys": [],
-        "depends_on": [],
-        "shares_databases_with": [
-          "layer:core-api"
-        ],
-        "notes": "Runs OSM diff updates via external geo-update-diff tool, modifying the same osm.db consumed by the API server."
-      }
+      ]
     },
     {
       "id": "layer:authentication",
       "name": "Authentication & Rate Limiting",
       "description": "Extracted authentication module providing API key validation, per-key sliding-window rate limiting, whitelisted origin bypass, and full CRUD key management backed by SQLite.",
-      "order": 3,
-      "type": "middleware",
-      "nodes": [
+      "nodeIds": [
         "file:geo_api_auth.py",
         "function:geo_api_auth.py:authenticate",
         "function:geo_api_auth.py:check_rate_limit",
@@ -2278,25 +2223,13 @@
         "function:geo_api_auth.py:_is_whitelisted_origin",
         "function:geo_api_auth.py:create_key",
         "function:geo_api_auth.py:list_keys"
-      ],
-      "files": [
-        "geo_api_auth.py"
-      ],
-      "dependencies": {
-        "deploys": [],
-        "depends_on": [],
-        "consumed_by": [
-          "layer:core-api"
-        ]
-      }
+      ]
     },
     {
       "id": "layer:core-api",
       "name": "Core API Server",
       "description": "The main monolithic geospatial API server. A single 3690-line Python file using http.server.BaseHTTPRequestHandler with 74 endpoint methods covering trails, cycling, elevation, transit, OSM POIs, geocoding, weather, ferries, sea navigation, roads, and mining. Includes thread-local SQLite connections, in-memory caches, haversine distance, and Lambert projection math. Two copies exist (root and bin/) that are nearly identical.",
-      "order": 4,
-      "type": "api-server",
-      "nodes": [
+      "nodeIds": [
         "file:geo-api.py",
         "class:geo-api.py:GeoAPIHandler",
         "class:geo-api.py:ThreadedHTTPServer",
@@ -2315,118 +2248,33 @@
         "function:bin/geo-api.py:province_where",
         "function:bin/geo-api.py:_lambert_inv",
         "function:bin/geo-api.py:_lambert_fwd"
-      ],
-      "files": [
-        "geo-api.py",
-        "bin/geo-api.py"
-      ],
-      "dependencies": {
-        "deploys": [],
-        "depends_on": [
-          "layer:authentication"
-        ],
-        "serves": [
-          "layer:frontend"
-        ]
-      },
-      "internalSubLayers": [
-        {
-          "name": "Utility Functions",
-          "description": "Standalone helper functions: get_db (thread-local SQLite connections), row_to_dict (row serialization with JSON decode), haversine (great-circle distance), province_where (SQL bounding box), _lambert_inv/_lambert_fwd (Lambert conformal conic projection).",
-          "nodes": [
-            "function:geo-api.py:get_db",
-            "function:geo-api.py:row_to_dict",
-            "function:geo-api.py:haversine",
-            "function:geo-api.py:province_where",
-            "function:geo-api.py:_lambert_inv",
-            "function:geo-api.py:_lambert_fwd",
-            "function:bin/geo-api.py:get_db",
-            "function:bin/geo-api.py:row_to_dict",
-            "function:bin/geo-api.py:haversine",
-            "function:bin/geo-api.py:province_where",
-            "function:bin/geo-api.py:_lambert_inv",
-            "function:bin/geo-api.py:_lambert_fwd"
-          ]
-        },
-        {
-          "name": "HTTP Server Infrastructure",
-          "description": "ThreadedHTTPServer class that wraps BaseHTTPRequestHandler with per-request threading.",
-          "nodes": [
-            "class:geo-api.py:ThreadedHTTPServer",
-            "class:bin/geo-api.py:ThreadedHTTPServer"
-          ]
-        },
-        {
-          "name": "Request Handler / Controller",
-          "description": "GeoAPIHandler monolith containing all 74 endpoint methods. Acts as router, controller, and data access layer combined.",
-          "nodes": [
-            "class:geo-api.py:GeoAPIHandler",
-            "class:bin/geo-api.py:GeoAPIHandler"
-          ]
-        }
-      ],
-      "notes": "geo-api.py and bin/geo-api.py are near-duplicates. The bin/ copy is the one deployed in the container. The root copy may be for local development."
+      ]
     },
     {
       "id": "layer:external-proxy",
       "name": "External API Proxy",
       "description": "Lightweight sidecar service (ogs-api.py) running on port 8091 that proxies GDELT breaking news and wttr.in weather requests with CORS support.",
-      "order": 5,
-      "type": "api-server",
-      "nodes": [
+      "nodeIds": [
         "file:ogs-api.py",
         "class:ogs-api.py:OgsAPIHandler",
         "class:ogs-api.py:ThreadedHTTPServer"
-      ],
-      "files": [
-        "ogs-api.py"
-      ],
-      "dependencies": {
-        "deploys": [],
-        "depends_on": [],
-        "notes": "Completely independent service with no code-level dependencies on the core API or auth module."
-      }
+      ]
     },
     {
       "id": "layer:frontend",
       "name": "Frontend Web Application",
       "description": "Single-page BC Road Conditions map application built with Leaflet.js and OSRM routing. Served as static files by the core API server.",
-      "order": 6,
-      "type": "frontend",
-      "nodes": [
+      "nodeIds": [
         "file:web/roads/index.html"
-      ],
-      "files": [
-        "web/roads/index.html"
-      ],
-      "dependencies": {
-        "deploys": [],
-        "depends_on": [
-          "layer:core-api"
-        ]
-      }
+      ]
     },
     {
       "id": "layer:documentation",
       "name": "Documentation",
       "description": "Project README documenting architecture, deployment, auth, databases, and frontend apps.",
-      "order": 7,
-      "type": "documentation",
-      "nodes": [
+      "nodeIds": [
         "document:README.md"
-      ],
-      "files": [
-        "README.md"
-      ],
-      "dependencies": {
-        "deploys": [],
-        "depends_on": [],
-        "documents": [
-          "layer:core-api",
-          "layer:authentication",
-          "layer:infrastructure-deployment"
-        ]
-      }
+      ]
     }
   ],
   "tour": [
