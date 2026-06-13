@@ -2429,8 +2429,6 @@
       }
     }
   ],
-  "architecture": "single-file-monolith-with-pipelines",
-  "architectureNotes": "The project follows a single-file monolith pattern for the API server, with all HTTP routing, business logic, and data access in one 3690-line file. The only extracted module is geo_api_auth.py for authentication/rate-limiting. Data pipelines are independent CLI scripts that share SQLite database schemas with the API server. Infrastructure is defined as Podman quadlets and systemd units.",
   "tour": [
     {
       "order": 1,
@@ -2546,11 +2544,15 @@
       "languageLesson": "Podman quadlets are systemd unit files that define container workloads \u2014 an alternative to docker-compose that integrates directly with systemd for lifecycle management. The cloudflared tunnel replaces traditional reverse proxies by creating an outbound-only connection to Cloudflare's network, eliminating the need to expose ports publicly."
     }
   ],
-  "meta": {
-    "projectName": "geo-api",
-    "nodeCount": 81,
-    "edgeCount": 115,
-    "layerCount": 8,
-    "tourStepCount": 12
+  "version": "1.0.0",
+  "project": {
+    "name": "geo-api",
+    "languages": [
+      "python"
+    ],
+    "frameworks": [],
+    "description": "Geospatial API server with 30+ REST endpoints for trails, cycling, elevation, transit, OSM POIs, geocoding, weather, BC Ferries, sea navigation, road events, and mining data. Monolithic Python stdlib http.server with SQLite backend.",
+    "analyzedAt": "2026-06-09T16:00:30-07:00",
+    "gitCommitHash": "aef356e8fc19cefb60cb555248c4af07cd47c1f6"
   }
 }
